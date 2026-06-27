@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiabetesAI - Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-white sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/home"><i class="fas fa-robot me-2"></i>DiabetesAI</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/prediction">Prediction</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+        <div class="prediction-card">
+            <h1 class="text-center mb-4 display-5 fw-bold">
+                <i class="fas fa-chart-line me-2"></i>Your Analysis Results
+            </h1>
+
+            <div class="result-card {% if prediction == 1 %}result-high-risk{% else %}result-low-risk{% endif %}">
+                <div class="result-title">
+                    <i class="fas fa-stethoscope me-2"></i>Prediction Result
+                </div>
+                <div class="risk-level">
+                    {% if prediction == 1 %}
+                        <i class="fas fa-exclamation-triangle me-2"></i>High Risk of Diabetes
+                    {% else %}
+                        <i class="fas fa-check-circle me-2"></i>Low Risk of Diabetes
+                    {% endif %}
+                </div>
+                <div class="probability">
+                    <strong>Risk Probability:</strong> {{ probability_class_1 }}
+                </div>
+                <div class="probability">
+                    <strong>Confidence in Low Risk:</strong> {{ probability_class_0 }}
+                </div>
+                <div class="message">{{ message }}</div>
+            </div>
+
+            <div class="row g-4 mt-4">
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-pie me-2"></i>Risk Assessment Gauge</h3>
+                        <canvas id="riskGaugeChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-bar me-2"></i>Probability Comparison</h3>
+                        <canvas id="probabilityChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-radar me-2"></i>Health Metrics Analysis</h3>
+                        <canvas id="healthMetricsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="chart-card">
+                    <h3><i class="fas fa-clinic-medical me-2"></i>Personalized Recommendations</h3>
+                    <ul class="recommendations-list">
+                        {% for rec in recommendations %}
+                        <li><i class="fas fa-heartbeat me-2 text-primary"></i>{{ rec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="chart-card">
+                    <h3><i class="fas fa-info-circle me-2"></i>Your Health Parameters</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr><td><strong>Gender:</strong></td><td>{{ gender }}</td></tr>
+                                <tr><td><strong>Age:</strong></td><td>{{ age }} years</td></tr>
+                                <tr><td><strong>BMI:</strong></td><td>{{ bmi }} kg/m²</td></tr>
+                                <tr><td><strong>HbA1c Level:</strong></td><td>{{ hba1c_level }}%</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr><td><strong>Blood Glucose:</strong></td><td>{{ blood_glucose_level }} mg/dL</td></tr>
+                                <tr><td><strong>Hypertension:</strong></td><td>{% if hypertension == 1 %}Yes{% else %}No{% endif %}</td></tr>
+                                <tr><td><strong>Heart Disease:</strong></td><td>{% if heart_disease == 1 %}Yes{% else %}No{% endif %}</td></tr>
+                                <tr>
+                                    <td><strong>Smoking History:</strong></td>
+                                    <td>{% if smoking_history == 0 %}Never{% elif smoking_history == 1 %}Former{% else %}Current{% endif %}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <button onclick="window.print()" class="btn btn-primary me-2">
+                    <i class="fas fa-print me-2"></i>Print Report
+                </button>
+                <a href="/prediction" class="btn btn-outline-primary">
+                    <i class="fas fa-redo-alt me-2"></i>New Prediction
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center mt-5 py-4">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 DiabetesAI. For educational purposes only. Always consult with a healthcare provider.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/chart.js"></script>
+    <script>
+        const riskPercentage = Number('{{ risk_percentage }}');
+        const probClass0 = {{ chart_data.probability_bar.no_diabetes_pct }};
+        const probClass1 = {{ chart_data.probability_bar.diabetes_pct }};
+        const userValues = {{ chart_data.radar.user_values | tojson }};
+        const normalRanges = {{ chart_data.radar.normal_values | tojson }};
+
+        createRiskGauge(riskPercentage);
+        createProbabilityChart(probClass0, probClass1);
+        createHealthMetricsChart(userValues, normalRanges);
+    </script>
+</body>
+</html>

@@ -3,9 +3,359 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prediction Page</title>
+    <title>DiabetesAI - Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --bg: #f0f4ff;
+            --card: #ffffff;
+            --text: #2d3748;
+            --muted: #718096;
+            --border: #e2e8f0;
+            --radius: 16px;
+            --shadow: 0 4px 24px rgba(102,126,234,0.10);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* NAV */
+        .navbar {
+            background: #fff !important;
+            box-shadow: 0 2px 12px rgba(102,126,234,0.08);
+        }
+        .navbar-brand {
+            font-weight: 800;
+            color: var(--primary) !important;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+        }
+        .nav-link { color: var(--text) !important; font-weight: 500; transition: color 0.2s; }
+        .nav-link:hover, .nav-link.active { color: var(--primary) !important; }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 0 2.5rem;
+            text-align: center;
+        }
+        .hero h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 0.5rem; }
+        .hero p { font-size: 1.05rem; opacity: 0.88; margin: 0; }
+
+        /* CARD */
+        .form-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            margin: 2.5rem auto;
+            max-width: 860px;
+        }
+
+        .section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 1.2rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.88rem;
+            margin-bottom: 0.4rem;
+        }
+        .form-label i { color: var(--primary); width: 16px; }
+
+        .form-control, .form-select {
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fafbff;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+            background: #fff;
+            outline: none;
+        }
+        .form-text { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+
+        .range-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 20px;
+            margin-top: 5px;
+        }
+        .badge-normal  { background: #c6f6d5; color: #276749; }
+        .badge-warn    { background: #fef3c7; color: #92400e; }
+        .badge-danger  { background: #fed7d7; color: #9b2c2c; }
+
+        .btn-predict {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.9rem 3.5rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.35);
+        }
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.45);
+            color: white;
+        }
+        .btn-predict:active { transform: none; }
+
+        .alert-danger {
+            border-radius: 10px;
+            font-size: 0.9rem;
+            border: none;
+            background: #fff5f5;
+            color: #9b2c2c;
+            border-left: 4px solid #fc8181;
+        }
+
+        /* LOADING */
+        #loadingOverlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(255,255,255,0.88);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+        #loadingOverlay.show { display: flex; }
+        .spinner-ring {
+            width: 60px; height: 60px;
+            border: 5px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.85s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #loadingOverlay {
+            display: none;
+            pointer-events: none;
+        }
+
+        #loadingOverlay.show {
+            display: flex;
+            pointer-events: all;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem 0;
+            color: var(--muted);
+            font-size: 0.83rem;
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+    </style>
 </head>
 <body>
-    <h3>Prediction Result</h3>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+    <div class="spinner-ring"></div>
+    <p style="font-weight:600;color:#667eea;margin:0;">Analyzing your health data…</p>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="#"><i class="fas fa-robot me-2"></i>DiabetesAI</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="/services">Services</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/prediction">Prediction</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+    <div class="container">
+        <h1><i class="fas fa-chart-line me-2"></i>Diabetes Risk Assessment</h1>
+        <p>Enter your health parameters below for an instant AI-powered risk analysis</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="form-card">
+
+        {% if error %}
+        <div class="alert alert-danger mb-3">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/predict" id="predictionForm">
+
+        <!-- Section 1 -->
+        <div class="section-label"><i class="fas fa-user"></i> Personal Information</div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label"><i class="fas fa-venus-mars"></i> Gender *</label>
+                <select id="gender" name="gender" class="form-select" required>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label"><i class="fas fa-calendar-alt"></i> Age (years) *</label>
+                <input type="number" id="age" name="age" class="form-control" min="0" max="120" placeholder="e.g. 45" required>
+                <div class="form-text">Enter your age in years</div>
+            </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="section-label"><i class="fas fa-heartbeat"></i> Medical History</div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-heartbeat"></i> Hypertension *</label>
+                <select id="hypertension" name="hypertension" class="form-select" required>
+                    <option value="">Select</option>
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-heart"></i> Heart Disease *</label>
+                <select id="heart_disease" name="heart_disease" class="form-select" required>
+                    <option value="">Select</option>
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-smoking"></i> Smoking History *</label>
+                <select id="smoking_history" name="smoking_history" class="form-select" required>
+                    <option value="">Select</option>
+                    <option value="0">Never</option>
+                    <option value="1">Former Smoker</option>
+                    <option value="2">Current Smoker</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="section-label"><i class="fas fa-flask"></i> Clinical Measurements</div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-weight"></i> BMI (kg/mÂ²) *</label>
+                <input type="number" id="bmi" name="bmi" class="form-control" step="0.1" min="10" max="50" placeholder="e.g. 24.5" required>
+                <div class="form-text">Normal range: 18.5â€“24.9</div>
+                <span id="bmiBadge" class="range-badge" style="display:none"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-chart-line"></i> HbA1c Level (%) *</label>
+                <input type="number" id="hba1c_level" name="hba1c_level" class="form-control" step="0.1" min="4" max="15" placeholder="e.g. 5.5" required>
+                <div class="form-text">Normal range: 4â€“5.6%</div>
+                <span id="hba1cBadge" class="range-badge" style="display:none"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-tint"></i> Blood Glucose (mg/dL) *</label>
+                <input type="number" id="blood_glucose_level" name="blood_glucose_level" class="form-control" step="1" min="50" max="400" placeholder="e.g. 90" required>
+                <div class="form-text">Normal fasting: 70â€“99 mg/dL</div>
+                <span id="glucoseBadge" class="range-badge" style="display:none"></span>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="text-center mt-3">
+            <button type="submit" class="btn btn-predict" id="predictBtn">
+                <i class="fas fa-brain me-2"></i>Predict Diabetes Risk
+            </button>
+        </div>
+
+        </form>
+
+    </div>
+</div>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2026 DiabetesAI. For educational purposes only. Always consult with a healthcare provider.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    /* â”€â”€ Live range badges (UI only â€” no impact on prediction) â”€â”€ */
+    document.getElementById('bmi').addEventListener('input', function () {
+        const v = parseFloat(this.value), b = document.getElementById('bmiBadge');
+        if (isNaN(v)) { b.style.display = 'none'; return; }
+        b.style.display = 'inline-block';
+        if (v < 18.5) { b.textContent = 'Underweight'; b.className = 'range-badge badge-warn'; }
+        else if (v < 25) { b.textContent = 'Normal âœ“'; b.className = 'range-badge badge-normal'; }
+        else if (v < 30) { b.textContent = 'Overweight'; b.className = 'range-badge badge-warn'; }
+        else { b.textContent = 'Obese'; b.className = 'range-badge badge-danger'; }
+    });
+
+    document.getElementById('hba1c_level').addEventListener('input', function () {
+        const v = parseFloat(this.value), b = document.getElementById('hba1cBadge');
+        if (isNaN(v)) { b.style.display = 'none'; return; }
+        b.style.display = 'inline-block';
+        if (v < 5.7) { b.textContent = 'Normal âœ“'; b.className = 'range-badge badge-normal'; }
+        else if (v < 6.5) { b.textContent = 'Pre-diabetic'; b.className = 'range-badge badge-warn'; }
+        else { b.textContent = 'Diabetic range'; b.className = 'range-badge badge-danger'; }
+    });
+
+    document.getElementById('blood_glucose_level').addEventListener('input', function () {
+        const v = parseFloat(this.value), b = document.getElementById('glucoseBadge');
+        if (isNaN(v)) { b.style.display = 'none'; return; }
+        b.style.display = 'inline-block';
+        if (v < 100) { b.textContent = 'Normal âœ“'; b.className = 'range-badge badge-normal'; }
+        else if (v < 126) { b.textContent = 'Pre-diabetic'; b.className = 'range-badge badge-warn'; }
+        else { b.textContent = 'High'; b.className = 'range-badge badge-danger'; }
+    });
+
+    /* â”€â”€ Submit â€” all prediction data comes from the backend API â”€â”€ */
+    document.getElementById('predictionForm').addEventListener('submit', function () {
+        document.getElementById('loadingOverlay').classList.add('show');
+        document.getElementById('predictBtn').disabled = true;
+    });
+
+</script>
 </body>
 </html>

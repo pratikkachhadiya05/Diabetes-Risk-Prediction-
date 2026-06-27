@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -133,10 +133,10 @@
     <script src="/static/js/chart.js"></script>
     <script>
         const riskPercentage = Number('{{ risk_percentage }}');
-        const probClass0 = {{ chart_data.probability_bar.no_diabetes_pct }};
-        const probClass1 = {{ chart_data.probability_bar.diabetes_pct }};
-        const userValues = {{ chart_data.radar.user_values | tojson }};
-        const normalRanges = {{ chart_data.radar.normal_values | tojson }};
+        const probClass0 = Number('{{ chart_data.probability_bar.no_diabetes_pct }}');
+        const probClass1 = Number('{{ chart_data.probability_bar.diabetes_pct }}');
+        const userValues = Number('{{ chart_data.radar.user_values | tojson }}');
+        const normalRanges = Number('{{ chart_data.radar.normal_values | tojson }}');
 
         createRiskGauge(riskPercentage);
         createProbabilityChart(probClass0, probClass1);

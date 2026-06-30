@@ -107,54 +107,54 @@ function createProbabilityChart(probClass0, probClass1) {
     });
 }
 
-// Function to create health metrics comparison chart
-function createHealthMetricsChart(userValues, normalRanges) {
-    const ctx = document.getElementById('healthMetricsChart');
-    if (!ctx) return;
+// // Function to create health metrics comparison chart
+// function createHealthMetricsChart(userValues, normalRanges) {
+//     const ctx = document.getElementById('healthMetricsChart');
+//     if (!ctx) return;
 
-    if (window.healthMetricsChart instanceof Chart) {
-        window.healthMetricsChart.destroy();
-    }
+//     if (window.healthMetricsChart instanceof Chart) {
+//         window.healthMetricsChart.destroy();
+//     }
 
-    window.healthMetricsChart = new Chart(ctx, {
-        type: 'radar',
-        data: {
-            labels: [
-                'BMI',
-                'HbA1c',
-                'Blood Glucose',
-                'Age Impact',
-                'Lifestyle'
-            ],
-            datasets: [
-                {
-                    label: 'Your Values',
-                    data: userValues,
-                    backgroundColor: 'rgba(102,126,234,0.2)',
-                    borderColor: 'rgba(102,126,234,1)',
-                    borderWidth: 2
-                },
-                {
-                    label: 'Normal Range',
-                    data: normalRanges,
-                    backgroundColor: 'rgba(81,207,102,0.2)',
-                    borderColor: 'rgba(81,207,102,1)',
-                    borderWidth: 2
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    max: 100
-                }
-            }
-        }
-    });
-}
+//     window.healthMetricsChart = new Chart(ctx, {
+//         type: 'radar',
+//         data: {
+//             labels: [
+//                 'BMI',
+//                 'HbA1c',
+//                 'Blood Glucose',
+//                 'Age Impact',
+//                 'Lifestyle'
+//             ],
+//             datasets: [
+//                 {
+//                     label: 'Your Values',
+//                     data: userValues,
+//                     backgroundColor: 'rgba(102,126,234,0.2)',
+//                     borderColor: 'rgba(102,126,234,1)',
+//                     borderWidth: 2
+//                 },
+//                 {
+//                     label: 'Normal Range',
+//                     data: normalRanges,
+//                     backgroundColor: 'rgba(81,207,102,0.2)',
+//                     borderColor: 'rgba(81,207,102,1)',
+//                     borderWidth: 2
+//                 }
+//             ]
+//         },
+//         options: {
+//             responsive: true,
+//             maintainAspectRatio: true,
+//             scales: {
+//                 r: {
+//                     beginAtZero: true,
+//                     max: 100
+//                 }
+//             }
+//         }
+//     });
+// }
 
 // Normalize values
 function normalizeValue(value, min, max, type) {

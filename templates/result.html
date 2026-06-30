@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg bg-white sticky-top">
         <div class="container">
@@ -39,9 +41,9 @@
                 </div>
                 <div class="risk-level">
                     {% if prediction == 1 %}
-                        <i class="fas fa-exclamation-triangle me-2"></i>High Risk of Diabetes
+                    <i class="fas fa-exclamation-triangle me-2"></i>High Risk of Diabetes
                     {% else %}
-                        <i class="fas fa-check-circle me-2"></i>Low Risk of Diabetes
+                    <i class="fas fa-check-circle me-2"></i>Low Risk of Diabetes
                     {% endif %}
                 </div>
                 <div class="probability">
@@ -66,10 +68,57 @@
                         <canvas id="probabilityChart"></canvas>
                     </div>
                 </div>
+
                 <div class="col-12">
-                    <div class="chart-card">
-                        <h3><i class="fas fa-chart-radar me-2"></i>Health Metrics Analysis</h3>
-                        <canvas id="healthMetricsChart"></canvas>
+                    <div class="chart-card feature-card">
+
+                        <h3>
+                            <i class="fas fa-brain me-2"></i>
+                            Top 5 Factors Influencing Prediction
+                        </h3>
+
+                        {% for item in top_features %}
+
+                        <div class="feature-item">
+
+                            <div class="feature-header">
+
+                                <span class="feature-rank">
+                                    {% if loop.index == 1 %}
+                                    🥇
+                                    {% elif loop.index == 2 %}
+                                    🥈
+                                    {% elif loop.index == 3 %}
+                                    🥉
+                                    {% else %}
+                                    {{ loop.index }}.
+                                    {% endif %}
+                                </span>
+
+                                <span class="feature-name">
+                                    {{ item.feature }}
+                                </span>
+
+                                <span class="feature-score">
+                                    {{ item.impact }}%
+                                </span>
+
+                            </div>
+
+                            <div class="progress feature-progress">
+
+                                <div class="progress-bar feature-progress-bar" role="progressbar"
+                                    style="width: {{ item.impact }}%;" aria-valuenow="{{ item.impact }}"
+                                    aria-valuemin="0" aria-valuemax="100">
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {% endfor %}
+
                     </div>
                 </div>
             </div>
@@ -91,20 +140,42 @@
                     <div class="row">
                         <div class="col-md-6">
                             <table class="table table-borderless">
-                                <tr><td><strong>Gender:</strong></td><td>{{ gender }}</td></tr>
-                                <tr><td><strong>Age:</strong></td><td>{{ age }} years</td></tr>
-                                <tr><td><strong>BMI:</strong></td><td>{{ bmi }} kg/m²</td></tr>
-                                <tr><td><strong>HbA1c Level:</strong></td><td>{{ hba1c_level }}%</td></tr>
+                                <tr>
+                                    <td><strong>Gender:</strong></td>
+                                    <td>{{ gender }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Age:</strong></td>
+                                    <td>{{ age }} years</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>BMI:</strong></td>
+                                    <td>{{ bmi }} kg/m²</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>HbA1c Level:</strong></td>
+                                    <td>{{ hba1c_level }}%</td>
+                                </tr>
                             </table>
                         </div>
                         <div class="col-md-6">
                             <table class="table table-borderless">
-                                <tr><td><strong>Blood Glucose:</strong></td><td>{{ blood_glucose_level }} mg/dL</td></tr>
-                                <tr><td><strong>Hypertension:</strong></td><td>{% if hypertension == 1 %}Yes{% else %}No{% endif %}</td></tr>
-                                <tr><td><strong>Heart Disease:</strong></td><td>{% if heart_disease == 1 %}Yes{% else %}No{% endif %}</td></tr>
+                                <tr>
+                                    <td><strong>Blood Glucose:</strong></td>
+                                    <td>{{ blood_glucose_level }} mg/dL</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Hypertension:</strong></td>
+                                    <td>{% if hypertension == 1 %}Yes{% else %}No{% endif %}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Heart Disease:</strong></td>
+                                    <td>{% if heart_disease == 1 %}Yes{% else %}No{% endif %}</td>
+                                </tr>
                                 <tr>
                                     <td><strong>Smoking History:</strong></td>
-                                    <td>{% if smoking_history == 0 %}Never{% elif smoking_history == 1 %}Former{% else %}Current{% endif %}</td>
+                                    <td>{% if smoking_history == 0 %}Never{% elif smoking_history == 1 %}Former{% else
+                                        %}Current{% endif %}</td>
                                 </tr>
                             </table>
                         </div>
@@ -125,7 +196,8 @@
 
     <footer class="text-center mt-5 py-4">
         <div class="container">
-            <p class="mb-0">&copy; 2026 DiabetesAI. For educational purposes only. Always consult with a healthcare provider.</p>
+            <p class="mb-0">&copy; 2026 DiabetesAI. For educational purposes only. Always consult with a healthcare
+                provider.</p>
         </div>
     </footer>
 
@@ -135,12 +207,13 @@
         const riskPercentage = Number('{{ risk_percentage }}');
         const probClass0 = Number('{{ chart_data.probability_bar.no_diabetes_pct }}');
         const probClass1 = Number('{{ chart_data.probability_bar.diabetes_pct }}');
-        const userValues = Number('{{ chart_data.radar.user_values | tojson }}');
-        const normalRanges = Number('{{ chart_data.radar.normal_values | tojson }}');
+        // const userValues = Number('{{ chart_data.radar.user_values | tojson }}');
+        // const normalRanges = Number('{{ chart_data.radar.normal_values | tojson }}');
 
         createRiskGauge(riskPercentage);
         createProbabilityChart(probClass0, probClass1);
-        createHealthMetricsChart(userValues, normalRanges);
+        // createHealthMetricsChart(userValues, normalRanges);
     </script>
 </body>
+
 </html>

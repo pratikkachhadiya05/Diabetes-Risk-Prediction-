@@ -1,4 +1,5 @@
 from pathlib import Path
+import shap
 import pickle
 import uuid
 import pandas as pd
@@ -33,9 +34,17 @@ class InputData(BaseModel):
 
 
 model = None
+rf_model = None
 try:
     with MODEL_PATH.open("rb") as file:
         model = pickle.load(file)
+
+    print(type(model))
+    rf_model = model.best_estimator_
+    rf_classifier = rf_model.named_steps["rf"]
+    print(rf_model.named_steps)
+    print(type(rf_model))
+
     print("Model loaded successfully")
 except FileNotFoundError:
     print(f"Error: model file not found at {MODEL_PATH}")
@@ -150,13 +159,43 @@ def get_recommendations(prediction: int, bmi: float, hba1c: float, glucose: floa
 
 def run_prediction(data: InputData) -> dict:
     input_df = build_model_input(data)
-    prediction = int(model.predict(input_df)[0])
-    prediction_prob = model.predict_proba(input_df)[0]
+    X_transformed = rf_model.named_steps["tf"].transform(input_df)
+    prediction = int(rf_model.predict(input_df)[0])
+    prediction_prob = rf_model.predict_proba(input_df)[0]
 
     prob0 = round(float(prediction_prob[0]), 4)
     prob1 = round(float(prediction_prob[1]), 4)
     risk_pct = round(prob1 * 100, 1)
     chart_data = get_chart_data(data, prob0, prob1, risk_pct)
+
+    feature_names = rf_model.named_steps["tf"].get_feature_names_out()
+
+    feature_importance = rf_classifier.feature_importances_
+
+    importance = []
+
+    for feature, score in zip(feature_names, feature_importance):
+
+        feature = feature.replace("ohe__", "")
+        feature = feature.replace("scaler__", "")
+        feature = feature.replace("remainder__", "")
+        feature = feature.replace("_", " ").title()
+
+        importance.append({
+            "feature": feature,
+            "impact": round(float(score * 100), 2),
+            "direction": "Important"
+        })
+
+    importance = sorted(
+        importance,
+        key=lambda x: x["impact"],
+        reverse=True
+    )
+
+    top_features = importance[:5]
+
+    print(top_features)
 
     return {
         "prediction": prediction,
@@ -171,6 +210,7 @@ def run_prediction(data: InputData) -> dict:
             if prediction == 1
             else "Great news! Keep maintaining healthy habits with regular exercise and a balanced diet."
         ),
+
         "chart_data": chart_data,
         "recommendations": get_recommendations(
             prediction,
@@ -178,6 +218,7 @@ def run_prediction(data: InputData) -> dict:
             data.hba1c_level,
             data.blood_glucose_level,
         ),
+
         "gender": data.gender,
         "age": data.age,
         "hypertension": data.hypertension,
@@ -186,6 +227,9 @@ def run_prediction(data: InputData) -> dict:
         "bmi": data.bmi,
         "hba1c_level": data.hba1c_level,
         "blood_glucose_level": data.blood_glucose_level,
+
+        "top_features": top_features,
+
     }
 
 

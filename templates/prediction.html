@@ -323,7 +323,7 @@
 <script>
 
   
-    /* â”€â”€ Live range badges (UI only â€” no impact on prediction) â”€â”€ */
+    /*  Live range badges (UI only  no impact on prediction)  */
     document.getElementById('bmi').addEventListener('input', function () {
         const v = parseFloat(this.value), b = document.getElementById('bmiBadge');
         if (isNaN(v)) { b.style.display = 'none'; return; }
@@ -331,7 +331,7 @@
 
     
         if (v < 18.5) { b.textContent = 'Underweight'; b.className = 'range-badge badge-warn'; }
-        else if (v < 25) { b.textContent = 'Normal “'; b.className = 'range-badge badge-normal'; }
+        else if (v < 25) { b.textContent = 'Normal '; b.className = 'range-badge badge-normal'; }
         else if (v < 30) { b.textContent = 'Overweight'; b.className = 'range-badge badge-warn'; }
         else { b.textContent = 'Obese'; b.className = 'range-badge badge-danger'; }
         
@@ -343,7 +343,7 @@
         b.style.display = 'inline-block';
         
         
-        if (v < 5.7) { b.textContent = 'Normal âœ“'; b.className = 'range-badge badge-normal'; }
+        if (v < 5.7) { b.textContent = 'Normal'; b.className = 'range-badge badge-normal'; }
         else if (v < 6.5) { b.textContent = 'Pre-diabetic'; b.className = 'range-badge badge-warn'; }
         else { b.textContent = 'Diabetic range'; b.className = 'range-badge badge-danger'; }
         
@@ -354,7 +354,7 @@
         if (isNaN(v)) { b.style.display = 'none'; return; }
         b.style.display = 'inline-block';
       
-        if (v < 100) { b.textContent = 'Normal âœ“'; b.className = 'range-badge badge-normal'; }
+        if (v < 100) { b.textContent = 'Normal'; b.className = 'range-badge badge-normal'; }
         else if (v < 126) { b.textContent = 'Pre-diabetic'; b.className = 'range-badge badge-warn'; }
         else { b.textContent = 'High'; b.className = 'range-badge badge-danger'; }
        

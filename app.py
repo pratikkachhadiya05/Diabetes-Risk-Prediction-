@@ -3,6 +3,7 @@ import shap
 import pickle
 import uuid
 import pandas as pd
+from typing import List
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -127,32 +128,95 @@ def get_chart_data(data: InputData, prob0: float, prob1: float, risk_pct: float)
     }
 
 
-def get_recommendations(prediction: int, bmi: float, hba1c: float, glucose: float) -> list[str]:
-    recommendations = []
 
-    if prediction == 1:
-        recommendations.append("Schedule an appointment with a healthcare provider.")
-        recommendations.append("Get a comprehensive diabetes screening test.")
-        recommendations.append("Discuss medication and monitoring options with your doctor.")
+def get_bmi_recommendation(bmi: float, age: int) -> str:
+    """
+    Return an age-adjusted BMI recommendation.
+    Uses standard adult BMI categories, with age-specific framing.
+    """
+    if age < 18:
+        return "BMI interpretation differs for children/teens — consult a pediatrician for growth-chart-based assessment."
 
-        if bmi > 25:
-            recommendations.append("Consider a weight management plan with a target BMI below 25.")
-        if hba1c > 6.5:
-            recommendations.append("Monitor blood sugar levels regularly.")
-        if glucose > 126:
-            recommendations.append("Follow a diabetes-friendly diet plan.")
+    # Category boundaries (standard WHO adult classification)
+    if bmi < 18.5:
+        category = "underweight"
+    elif bmi < 25:
+        category = "normal"
+    elif bmi < 30:
+        category = "overweight"
     else:
-        recommendations.append("Maintain a balanced diet rich in vegetables and whole grains.")
-        recommendations.append("Exercise regularly, aiming for at least 150 minutes per week.")
+        category = "obese"
 
-        if bmi > 25:
-            recommendations.append("Work toward a healthy BMI range.")
-        if hba1c > 5.7:
-            recommendations.append("Monitor HbA1c levels annually.")
-        if glucose > 100:
-            recommendations.append("Reduce added sugar and processed foods.")
+    if 18 <= age <= 39:
+        messages = {
+            "underweight": "Your BMI is below the healthy range — consider a nutrient-dense diet to reach a healthy weight.",
+            "normal": "Your BMI is in a healthy range — keep up regular exercise and balanced eating.",
+            "overweight": "Your BMI is above the healthy range — aim for gradual weight loss through diet and 150+ minutes of weekly exercise.",
+            "obese": "Your BMI indicates obesity — a structured weight-loss plan with medical guidance is recommended.",
+        }
+    elif 40 <= age <= 59:
+        messages = {
+            "underweight": "Your BMI is low for your age — focus on protein intake and strength training to preserve muscle mass.",
+            "normal": "Your BMI is healthy — maintain it with regular strength and cardio exercise as metabolism naturally slows with age.",
+            "overweight": "Your BMI is above the healthy range — combine calorie control with strength training to protect metabolic health.",
+            "obese": "Your BMI indicates obesity — work with a healthcare provider on weight management, as this raises diabetes and cardiovascular risk at your age.",
+        }
+    else:  # 60+
+        messages = {
+            "underweight": "Being underweight at your age raises risk of frailty — focus on adequate protein and resistance exercise, not aggressive calorie restriction.",
+            "normal": "Your BMI is healthy — prioritize maintaining muscle mass and bone density with strength exercises.",
+            "overweight": "A BMI slightly above 25 carries lower risk at your age than in younger adults — focus on staying active and monitoring metabolic health rather than aggressive weight loss.",
+            "obese": "Your BMI indicates obesity — weight management is still beneficial, but should be done gradually and under medical supervision to protect muscle and bone health.",
+        }
 
-        recommendations.append("Schedule regular health checkups every 6 months.")
+    return messages[category]
+
+def get_recommendations(prediction: int, bmi: float, hba1c: float, glucose: float, age: int) -> list[str]:
+    """
+    Generate personalized health recommendations based on model prediction
+    and clinical parameters (BMI, HbA1c, fasting glucose).
+
+    Risk tiers (based on ADA thresholds):
+      - Diabetes:     prediction == 1  (or hba1c >= 6.5 or glucose >= 126)
+      - Prediabetes:  prediction == 0 but hba1c 5.7-6.4 or glucose 100-125
+      - Healthy:      prediction == 0 and normal hba1c/glucose
+    """
+    recommendations: list[str] = []
+
+    is_diabetic = prediction == 1 or hba1c >= 6.5 or glucose >= 126
+    is_prediabetic = (not is_diabetic) and (5.7 <= hba1c < 6.5 or 100 <= glucose < 126)
+
+    if is_diabetic:
+        recommendations.extend([
+            "Keep blood sugar under control — monitor glucose levels regularly and stay within your target range.",
+            "Take medications exactly as prescribed — never skip insulin or diabetes medicines without medical advice.",
+            "Follow a diabetes-friendly diet — eat balanced meals with controlled carbohydrate portions and avoid excess sugar.",
+            "Take care of your feet and eyes — check your feet daily and have regular eye examinations to prevent complications.",
+            "Visit your doctor regularly — routine checkups help detect and manage complications early.",
+        ])
+
+
+    elif is_prediabetic:
+        recommendations.extend([
+            "Lose 5-10% of body weight — even modest weight loss can significantly reduce your risk of developing diabetes.",
+            "Exercise at least 150 minutes per week — regular physical activity improves insulin sensitivity.",
+            "Reduce sugar and refined carbohydrates — replace white bread, sweets, and sugary drinks with healthier alternatives.",
+            "Monitor blood sugar regularly — keep track of your glucose levels and follow your doctor's advice.",
+            "Manage stress and sleep well — aim for 7–9 hours of sleep and practice stress-reducing activities like yoga or meditation.",
+        ])
+
+
+    else:  # healthy / low risk
+        recommendations.extend([
+            "Maintain a healthy weight — keeping your weight in a healthy range lowers your risk of developing diabetes.",
+            "Exercise regularly — aim for at least 30 minutes of physical activity on most days.",
+            "Eat a balanced diet — choose whole grains, fruits, vegetables, lean protein, and limit sugary foods and drinks.",
+            "Get regular health checkups — check your blood sugar periodically, especially if you have a family history of diabetes.",
+            "Avoid smoking and limit alcohol — these habits help protect your overall health and reduce diabetes risk.",
+        ])
+        
+
+    recommendations.append(get_bmi_recommendation(bmi, age))
 
     return recommendations
 
@@ -213,10 +277,11 @@ def run_prediction(data: InputData) -> dict:
 
         "chart_data": chart_data,
         "recommendations": get_recommendations(
-            prediction,
+            risk_pct,
             data.bmi,
             data.hba1c_level,
             data.blood_glucose_level,
+            data.age
         ),
 
         "gender": data.gender,
